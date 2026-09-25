@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>PHASE 0 — ทดสอบการเชื่อมต่อ API</title>
+<style>
+  :root{
+    --navy:#1B365D;
+    --line:#d8dee7;
+    --bg:#f4f6f9;
+    --ok:#1b7f4b;
+    --fail:#b3261e;
+    --muted:#5b6673;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:16px;
+    background:var(--bg);
+    color:#1a1f26;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Sarabun","Noto Sans Thai",Tahoma,sans-serif;
+    font-size:16px; line-height:1.6;
+  }
+  .wrap{max-width:760px;margin:0 auto}
+  header{
+    background:var(--navy); color:#fff;
+    border-radius:10px; padding:18px 18px 16px;
+  }
+  header h1{margin:0 0 4px;font-size:19px;line-height:1.35}
+  header p{margin:0;font-size:13px;opacity:.85}
+  .card{
+    background:#fff; border:1px solid var(--line);
+    border-radius:10px; padding:16px; margin-top:14px;
+  }
+  .card h2{margin:0 0 10px;font-size:15px;color:var(--navy)}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  input[type=text]{
+    width:100%; padding:12px; font-size:16px;
+    border:1px solid var(--line); border-radius:8px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  button{
+    flex:1 1 200px; min-height:48px; padding:12px 16px;
+    font-size:16px; font-weight:600; font-family:inherit;
+    border-radius:8px; border:1px solid var(--navy); cursor:pointer;
+  }
+  button.primary{background:var(--navy);color:#fff}
+  button.secondary{background:#fff;color:var(--navy)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .verdict{
+    display:none; margin-top:14px; padding:14px;
+    border-radius:8px; font-weight:700; font-size:16px;
+  }
+  .verdict.pass{display:block;background:#e8f5ee;color:var(--ok);border:1px solid #b6ddc6}
+  .verdict.fail{display:block;background:#fdeceb;color:var(--fail);border:1px solid #f2c2be}
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px}
+  th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{width:42%;color:var(--muted);font-weight:600}
+  td{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
+  pre{
+    background:#0f1720;color:#e6edf3;padding:12px;border-radius:8px;
+    overflow-x:auto;font-size:13px;margin:8px 0 0;white-space:pre-wrap;word-break:break-all;
+  }
+  .hint{font-size:13px;color:var(--muted);margin-top:10px}
+  .steps{font-size:14px;padding-left:20px;margin:8px 0 0}
+  .steps li{margin-bottom:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>PHASE 0 — ทดสอบการเชื่อมต่อ API</h1>
+    <p>ระบบค้นหาข้อมูลร้านค้า · กองกายภาพและสิ่งแวดล้อม มหาวิทยาลัยมหิดล</p>
+  </header>
+
+  <div class="card">
+    <h2>ที่อยู่ของ API</h2>
+    <label for="urlbox">วาง URL ที่ลงท้ายด้วย /exec ที่ได้จากการ Deploy</label>
+    <input type="text" id="urlbox" spellcheck="false" autocapitalize="off" autocomplete="off"
+           placeholder="https://script.google.com/macros/s/xxxxxxxx/exec">
+    <div class="btnrow">
+      <button type="button" class="primary" id="btnPost">ทดสอบ API (POST)</button>
+      <button type="button" class="secondary" id="btnGet">ทดสอบเสริม (GET)</button>
+    </div>
+    <p class="hint">การทดสอบหลักคือปุ่ม POST ส่วนปุ่ม GET ใช้ดูว่าเซิร์ฟเวอร์ตอบอยู่หรือไม่</p>
+  </div>
+
+  <div class="verdict" id="verdict"></div>
+
+  <div class="card" id="resultCard" style="display:none">
+    <h2>รายละเอียดผลการทดสอบ</h2>
+    <table id="resultTable"></table>
+    <h2 style="margin-top:16px">ข้อความที่เซิร์ฟเวอร์ตอบกลับ</h2>
+    <pre id="rawBody">—</pre>
+  </div>
+
+  <div class="card">
+    <h2>ถ้าการทดสอบไม่ผ่าน</h2>
+    <ol class="steps">
+      <li>ตรวจว่า URL ลงท้ายด้วย <b>/exec</b> ไม่ใช่ <b>/dev</b></li>
+      <li>ตรวจว่าตอน Deploy เลือก <b>Who has access = Anyone</b></li>
+      <li>เปิด URL นั้นในแท็บใหม่โดยตรง ถ้าเห็นข้อความ JSON แปลว่าเซิร์ฟเวอร์ทำงาน ปัญหาอยู่ที่ CORS</li>
+      <li>ถ้าขึ้นหน้าขอให้ลงชื่อเข้าใช้ Google แปลว่าตั้งค่าสิทธิ์การเข้าถึงผิด</li>
+      <li>ส่งภาพหน้าจอของหน้านี้ทั้งหน้ากลับมา</li>
+    </ol>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   จุดเดียวที่ต้องแก้ในไฟล์นี้
+   นำ URL ที่ลงท้ายด้วย /exec มาวางแทนข้อความในเครื่องหมายคำพูดด้านล่าง
+   ============================================================ */
+var API_URL = "วาง_URL_ที่ลงท้ายด้วย_exec_ตรงนี้";
+/* ============================================================
+   ห้ามแก้ส่วนที่อยู่ใต้บรรทัดนี้
+   ============================================================ */
+
+var urlbox = document.getElementById('urlbox');
+var verdictEl = document.getElementById('verdict');
+var resultCard = document.getElementById('resultCard');
+var tableEl = document.getElementById('resultTable');
+var rawEl = document.getElementById('rawBody');
+var btnPost = document.getElementById('btnPost');
+var btnGet = document.getElementById('btnGet');
+
+if (API_URL.indexOf('http') === 0) { urlbox.value = API_URL; }
+
+function setVerdict(pass, text) {
+  verdictEl.className = 'verdict ' + (pass ? 'pass' : 'fail');
+  verdictEl.textContent = text;
+}
+
+function showRows(rows) {
+  tableEl.textContent = '';
+  rows.forEach(function (r) {
+    var tr = document.createElement('tr');
+    var th = document.createElement('th');
+    th.textContent = r[0];
+    var td = document.createElement('td');
+    td.textContent = r[1];
+    tr.appendChild(th);
+    tr.appendChild(td);
+    tableEl.appendChild(tr);
+  });
+  resultCard.style.display = 'block';
+}
+
+function getUrl() {
+  var u = urlbox.value.trim();
+  if (u.indexOf('https://') !== 0) {
+    setVerdict(false, 'ยังไม่ได้ใส่ URL ที่ถูกต้อง');
+    showRows([['สาเหตุ', 'URL ต้องขึ้นต้นด้วย https:// และลงท้ายด้วย /exec']]);
+    rawEl.textContent = '—';
+    return null;
+  }
+  return u;
+}
+
+function busy(on) {
+  btnPost.disabled = on;
+  btnGet.disabled = on;
+  if (on) {
+    setVerdict(true, 'กำลังส่งคำขอ โปรดรอสักครู่');
+    verdictEl.className = 'verdict pass';
+  }
+}
+
+function describeError(err) {
+  var msg = String(err && err.message ? err.message : err);
+  if (msg.indexOf('Failed to fetch') >= 0 ||
+      msg.indexOf('Load failed') >= 0 ||
+      msg.indexOf('NetworkError') >= 0) {
+    return 'เบราว์เซอร์ปิดกั้นคำขอ สาเหตุที่พบบ่อยที่สุดคือ CORS หรือ URL ไม่ถูกต้อง ' +
+           'ให้เปิด Developer Tools แท็บ Console เพื่อดูข้อความเต็ม';
+  }
+  return msg;
+}
+
+function runTest(method) {
+  var url = getUrl();
+  if (!url) { return; }
+  busy(true);
+
+  var started = performance.now();
+  var payload = { action: 'probe', sentAt: new Date().toISOString(), note: 'phase0' };
+
+  var options;
+  var target;
+
+  if (method === 'POST') {
+    target = url;
+    options = {
+      method: 'POST',
+      /* text/plain เป็นชนิดที่ไม่ทำให้เกิด preflight — ห้ามเปลี่ยนเป็น application/json */
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+      mode: 'cors',
+      credentials: 'omit',
+      redirect: 'follow',
+      cache: 'no-store'
+    };
+  } else {
+    target = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'action=probe';
+    options = {
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'omit',
+      redirect: 'follow',
+      cache: 'no-store'
+    };
+  }
+
+  fetch(target, options)
+    .then(function (res) {
+      return res.text().then(function (text) {
+        return { res: res, text: text };
+      });
+    })
+    .then(function (out) {
+      var elapsed = Math.round(performance.now() - started);
+      var res = out.res;
+      var text = out.text;
+      var parsed = null;
+      var parseNote = 'อ่านเป็น JSON ไม่ได้';
+      try {
+        parsed = JSON.parse(text);
+        parseNote = 'อ่านเป็น JSON ได้';
+      } catch (e) { /* ปล่อยให้เป็น null */ }
+
+      var passed = res.ok && parsed && parsed.ok === true;
+
+      setVerdict(passed,
+        passed ? 'ผ่าน — เบราว์เซอร์เรียก Apps Script และอ่านคำตอบ JSON ได้'
+               : 'ไม่ผ่าน — ได้รับคำตอบแต่ไม่ใช่ JSON ที่คาดไว้');
+
+      showRows([
+        ['วิธีที่ใช้ส่ง', method],
+        ['ส่งคำขอแล้ว', 'ใช่'],
+        ['ได้รับคำตอบแล้ว', 'ใช่'],
+        ['สถานะ HTTP', String(res.status) + ' ' + (res.ok ? '(สำเร็จ)' : '(ไม่สำเร็จ)')],
+        ['ชนิดของคำตอบ (response.type)', String(res.type)],
+        ['ถูก redirect หรือไม่', res.redirected ? 'ใช่' : 'ไม่ใช่'],
+        ['ที่อยู่สุดท้ายที่ตอบกลับ', String(res.url)],
+        ['ขนาดข้อความที่ได้รับ', String(text.length) + ' ตัวอักษร'],
+        ['การอ่านเป็น JSON', parseNote],
+        ['ค่า ok ที่เซิร์ฟเวอร์ตอบ', parsed ? String(parsed.ok) : '—'],
+        ['เวอร์ชันสคริปต์', parsed && parsed.version ? String(parsed.version) : '—'],
+        ['เวลาที่ใช้', String(elapsed) + ' มิลลิวินาที']
+      ]);
+
+      rawEl.textContent = text.length > 4000 ? text.slice(0, 4000) + '\n... (ตัดให้สั้นลง)' : text;
+      busy(false);
+    })
+    .catch(function (err) {
+      var elapsed = Math.round(performance.now() - started);
+      setVerdict(false, 'ไม่ผ่าน — เบราว์เซอร์อ่านคำตอบไม่ได้');
+      showRows([
+        ['วิธีที่ใช้ส่ง', method],
+        ['ส่งคำขอแล้ว', 'ใช่'],
+        ['ได้รับคำตอบแล้ว', 'ไม่ได้รับ'],
+        ['ข้อความจากเบราว์เซอร์', String(err && err.message ? err.message : err)],
+        ['คำอธิบาย', describeError(err)],
+        ['เวลาที่ใช้', String(elapsed) + ' มิลลิวินาที']
+      ]);
+      rawEl.textContent = '—';
+      busy(false);
+    });
+}
+
+btnPost.addEventListener('click', function () { runTest('POST'); });
+btnGet.addEventListener('click', function () { runTest('GET'); });
+</script>
+</body>
+</html>
